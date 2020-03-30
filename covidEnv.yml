@@ -1,0 +1,15 @@
+name: covid
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - seaborn
+  - jupyter
+  - jupyterlab
+  - matplotlib
+  - pandas
+  - pylint
+  - urllib3
+  - requests
+  - scikit-learn
+  - beautifulsoup4
