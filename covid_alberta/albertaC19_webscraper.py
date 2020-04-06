@@ -1,8 +1,9 @@
+'''module for scraping the updated covid-19 data from the alberta website'''
+import json
+from pathlib import Path
 import requests
 from bs4 import BeautifulSoup
-import json
 import pandas as pd
-from pathlib import Path
 
 
 class albertaC19_webscraper():
@@ -18,7 +19,7 @@ class albertaC19_webscraper():
         self.page = requests.get(self.covid_url)
         self.soup = BeautifulSoup(self.page.content, 'html.parser')
 
-    def scrape_albertaTotals(self, output_filename:str='albertaTotalData', fltypes=['csv', 'json'],
+    def scrape_albertaTotals(self, output_filename:str='albertaTotalData', fltypes=('csv', 'json'),
                              return_dataframe:bool=False):
         '''scrape the total case counts in alberta and save the data to the output folder
 
@@ -69,7 +70,7 @@ class albertaC19_webscraper():
             write_sucess = True
         return write_sucess
 
-    def scrape_albertaRegions(self, output_filename:str='albertaRegionData', fltypes=['csv', 'json'],
+    def scrape_albertaRegions(self, output_filename:str='albertaRegionData', fltypes=('csv', 'json'),
                               return_dataframe:bool=False):
         '''scrape the total case counts in alberta by region and save the data
         to the output folder
@@ -125,7 +126,7 @@ class albertaC19_webscraper():
             write_sucess = True
         return write_sucess
 
-    def scrape_albertaTesting(self, output_filename:str='albertaTestingData', fltypes=['csv', 'json'],
+    def scrape_albertaTesting(self, output_filename:str='albertaTestingData', fltypes=('csv', 'json'),
                               return_dataframe:bool=False):
         '''scrape the testing counts by date in alberta and save the data
         to the output folder
@@ -177,7 +178,7 @@ class albertaC19_webscraper():
         return write_sucess
 
     def scrape_all(self, totalfl:str='albertaTotalData', regionsfl:str='albertaRegionData',
-                   testfl:str='albertaTestingData', fltypes=['csv', 'json'],
+                   testfl:str='albertaTestingData', fltypes=('csv', 'json'),
                    return_dataframes:bool=False):
         '''scrape the total alberta covid-19 case counts, the covid-19 case counts by
         region and the testing data from the alberta covid-19 website
