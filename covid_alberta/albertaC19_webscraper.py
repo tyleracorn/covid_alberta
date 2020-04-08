@@ -109,8 +109,6 @@ class albertaC19_webscraper():
 
         return df_daily_cases
 
-    def scrape_albertaTotals(self, output_filename:str='albertaTotalData', fltypes=('csv', 'json'),
-                             return_dataframe:bool=False):
     def _clean_case_status_data(self, ab_case_status:dict):
         '''
         utility function used to clean up the case status data
@@ -138,56 +136,49 @@ class albertaC19_webscraper():
 
         return df_case_status
 
+    def scrape_albertaTotals(self, output_filename:str='alberta_total_data', fltypes=('csv', 'json'),
+                             update_figure_order=None, return_dataframe:bool=False):
         '''scrape the total case counts in alberta and save the data to the output folder
 
         Parameters:
             output_filename:str
                 filename without the file ending
             fltypes:[list or str]
-                will save out either csv, json or both filetypes
+                will save out either csv, json or both filetypes. use `None` to not write anything
+            update_figure_order:dict
+                the order the figures are displayed on the website using python 0 index. This is important
+                because the associated tags use a randomly generated id name so I am accessing them by order
+                `self.totals_figure_order` will print out the default order expected
             return_dataframe:bool
                 will return either the dataframes or a true/false on write success
         '''
-        results = self.soup.find(id='case-counts')
-        caseCountResults = results.find_all('script')
+        results = self.soup.find(id=self.html_ids['totals'])
+        totals_results = results.find_all('script')
+        fig_order = self.totals_figure_order.copy()
+        if update_figure_order:
+            fig_order.update(update_figure_order)
 
         # Scrape the data
-        caseCountCum = json.loads(caseCountResults[0].string)
-        caseCountByDat = json.loads(caseCountResults[2].string)
-        albertaTotalData = {'cumulative': {'date': caseCountCum['x']['data'][0]['x'],
-                                           'cum_cases': caseCountCum['x']['data'][0]['y']},
-                            'byDay': {'date': caseCountByDat['x']['data'][0]['x'],
-                                      'new_cases': caseCountByDat['x']['data'][0]['y']}
-                            }
-        # Write out or Return the data
-        write_sucess = False
-        if 'json' in fltypes:
-            flpath = self.outputfolder.joinpath(output_filename).with_suffix('.json')
-            aTotal = json.dumps(albertaTotalData)
-            with open(flpath, "w") as fl:
-                fl.write(aTotal)
-            write_sucess = True
-        if 'csv' in fltypes or return_dataframe:
-            flpath = self.outputfolder.joinpath(output_filename).with_suffix('.csv')
-            abTotalCum = pd.DataFrame(data=albertaTotalData['cumulative']['cum_cases'],
-                                      index=albertaTotalData['cumulative']['date'],
-                                      columns=['cum_cases'])
-            abTotalCum.index = pd.to_datetime(abTotalCum.index)
+        ab_cumulative = json.loads(totals_results[fig_order['cum_cases']].string)
+        ab_daily_cases = json.loads(totals_results[fig_order['daily_cases']].string)
+        ab_case_status = json.loads(totals_results[fig_order['case_status']].string)
 
-            abTotalNCases = pd.DataFrame(data=albertaTotalData['byDay']['new_cases'],
-                                         index=albertaTotalData['byDay']['date'],
-                                         columns=['new_cases'])
-            abTotalNCases.index = pd.to_datetime(abTotalNCases.index)
-            abTotal = abTotalNCases.join(abTotalCum)
+        df_ab_cumulative = self._clean_cumulative_data(ab_cumulative)
+        df_ab_daily_cases = self._clean_daily_case_data(ab_daily_cases)
+        df_ab_case_status = self._clean_case_status_data(ab_case_status)
 
-            if 'csv' in fltypes:
-                abTotal.to_csv(flpath)
-            if return_dataframe:
-                return abTotal
-            write_sucess = True
-        return write_sucess
+        df_ab_all = df_ab_cumulative.join([df_ab_daily_cases, df_ab_case_status])
+        # clean up df formatting
+        df_ab_all.fillna(0, inplace=True)
+        df_ab_all = df_ab_all.astype(int)
 
-    def scrape_albertaRegions(self, output_filename:str='albertaRegionData', fltypes=('csv', 'json'),
+        # Write out the data. If fltypes = None the function will return False
+        write_success = self._write_dataframe(df_ab_all, output_filename, fltypes)
+        if return_dataframe:
+            return df_ab_all
+        return write_success
+
+    def scrape_albertaRegions(self, output_filename:str='alberta_region_data', fltypes=('csv', 'json'),
                               return_dataframe:bool=False):
         '''scrape the total case counts in alberta by region and save the data
         to the output folder
@@ -200,50 +191,41 @@ class albertaC19_webscraper():
             return_dataframe:bool
                 will return either the dataframes or a true/false on write success
         '''
-        results = self.soup.find(id='geospatial')
-        regionCaseCountResults = results.find_all('script')
-        regionCCDict = json.loads(regionCaseCountResults[0].string)['x']
+        results = self.soup.find(id=self.html_ids['regions'])
 
-        zoneLen = len(regionCCDict['data'])
-        albertaRegionData = dict()
-        for idx in range (zoneLen):
-            zoneName = regionCCDict['data'][idx]['name']
-            albertaRegionData[zoneName] = {'date':regionCCDict['data'][idx]['x'],
-                                           'new_cases':regionCCDict['data'][idx]['y']}
-        write_sucess = False
-        # Write out the data
-        if 'json' in fltypes:
-            flpath = self.outputfolder.joinpath(output_filename).with_suffix('.json')
-            aRegion = json.dumps(albertaRegionData)
-            with open(flpath, "w") as fl:
-                fl.write(aRegion)
-            write_sucess = True
-        if 'csv' in fltypes or return_dataframe:
-            flpath = self.outputfolder.joinpath(output_filename).with_suffix('.csv')
-            abRegions = list()
-            for idx, key in enumerate(albertaRegionData.keys()):
-                if 'Zone' in key:
-                    zone = key.strip(' Zone')
-                else:
-                    zone = key
-                column = f'{zone}_newCases'
-                abRegions.append(pd.DataFrame(data=albertaRegionData[key]['new_cases'],
-                                              index=albertaRegionData[key]['date'],
-                                              columns=[column]))
+        region_results = results.find_all('script')
+        results_as_dict = json.loads(region_results[0].string)['x']
 
-            abRegionsDF = abRegions[0].join(abRegions[1:])
-            abRegionsDF.index = pd.to_datetime(abRegionsDF.index)
-            abRegionsDF.fillna(0, inplace=True)
-            abRegionsDF = abRegionsDF.astype(int)
+        zone_len = len(results_as_dict['data'])
+        region_data_dict = dict()
+        for idx in range (zone_len):
+            zone_name = results_as_dict['data'][idx]['name']
+            region_data_dict[zone_name] = {'date':results_as_dict['data'][idx]['x'],
+                                           'cumulative':results_as_dict['data'][idx]['y']}
 
-            if 'csv' in fltypes:
-                abRegionsDF.to_csv(flpath)
-            if return_dataframe:
-                return abRegionsDF
-            write_sucess = True
-        return write_sucess
+        list_ab_regions = list()
+        for idx, key in enumerate(region_data_dict.keys()):
+            if 'Zone' in key:
+                zone = key.strip(' Zone')
+            else:
+                zone = key
+            column = f'{zone}_cumulative'
+            list_ab_regions.append(pd.DataFrame(data=region_data_dict[key]['cumulative'],
+                                                index=region_data_dict[key]['date'],
+                                                columns=[column]))
 
-    def scrape_albertaTesting(self, output_filename:str='albertaTestingData', fltypes=('csv', 'json'),
+        df_ab_regions = list_ab_regions[0].join(list_ab_regions[1:])
+        df_ab_regions.index = pd.to_datetime(df_ab_regions.index)
+        df_ab_regions.fillna(0, inplace=True)
+        df_ab_regions = df_ab_regions.astype(int)
+
+        # Write out the data. If fltypes = None the function will return False
+        write_success = self._write_dataframe(df_ab_regions, output_filename, fltypes)
+        if return_dataframe:
+            return df_ab_regions
+        return write_success
+
+    def scrape_albertaTesting(self, output_filename:str='alberta_testing_data', fltypes=('csv', 'json'),
                               return_dataframe:bool=False):
         '''scrape the testing counts by date in alberta and save the data
         to the output folder
@@ -256,47 +238,61 @@ class albertaC19_webscraper():
             return_dataframe:bool
                 will return either the dataframes or a true/false on write success
         '''
-        results = self.soup.find(id='laboratory-testing')
-        testingResults = results.find_all('script')
-
+        results = self.soup.find(id=self.html_ids['testing'])
+        testing_results = results.find_all('script')
+        if len(testing_results) != 1:
+            raise Warning("expecting only 1 test case categories. Website likely changed. Check the results")
         # Scrape the data
-        testingDict = json.loads(testingResults[0].string)['x']
-        testingDict.keys()
-        albertaTestingData = dict()
-        for idx in range(len(testingDict['data'])):
-            albertaTestingData[testingDict['data'][idx]['name']] = {'date': testingDict['data'][idx]['x'],
-                                                                    'n_tests': testingDict['data'][idx]['y']}
+        tests_as_dict = json.loads(testing_results[0].string)['x']
+        dates = tests_as_dict['data'][0]['x']
+        test_count = tests_as_dict['data'][0]['y']
+        # Convert to DataFrame
+        df_ab_tests = pd.DataFrame(data=test_count,
+                                        index=dates,
+                                        columns=['test_count'])
+        df_ab_tests.index = pd.to_datetime(df_ab_tests.index)
+        df_ab_tests = df_ab_tests.astype(int)
+
+        # Write out the data. If fltypes = None the function will return False
+        write_success = self._write_dataframe(df_ab_tests, output_filename, fltypes)
+        if return_dataframe:
+            return df_ab_tests
+        return write_success
+
+    def _write_dataframe(self, dataframe:pd.DataFrame, output_filename:str, fltypes):
+        ''''
+        utility function to write the dataframe scraped. This way we can easily add different
+        write functions to all the scraping functions.
+
+        Parameters:
+            dataframe:pd.DataFrame
+                pd.DataFrame to write out
+            output_filename:str
+                filename without the file ending
+            fltypes:[list or str]
+                will save out either csv, json or both filetypes
+        Returns:
+            write_success:bool
+                whether it wrote anything out or not. If `None` for fltypes is passed
+                will return `False`
+
+        '''
+        write_success = False
         # Write out the data
-        write_sucess = False
-        if 'json' in fltypes:
-            flpath = self.outputfolder.joinpath(output_filename).with_suffix('.json')
-            aTest = json.dumps(albertaTestingData)
-            with open(flpath, "w") as fl:
-                fl.write(aTest)
-            write_sucess = True
-        if 'csv' in fltypes or return_dataframe:
-            flpath = self.outputfolder.joinpath(output_filename).with_suffix('.csv')
-            abTesting = list()
-            for idx, key in enumerate(albertaTestingData.keys()):
-                column = f'{key}_newTests'
-                abTesting.append(pd.DataFrame(data=albertaTestingData[key]['n_tests'],
-                                              index=albertaTestingData[key]['date'],
-                                              columns=[column]))
-            abTestsDF = abTesting[0].join(abTesting[1:])
-            abTestsDF.index = pd.to_datetime(abTestsDF.index)
-            abTestsDF.fillna(0, inplace=True)
-            abTestsDF = abTestsDF.astype(int)
-
+        if fltypes:
+            if 'json' in fltypes:
+                flpath = self.outputfolder.joinpath(output_filename).with_suffix('.json')
+                dataframe.to_json(flpath)
+                write_success = True
             if 'csv' in fltypes:
-                abTestsDF.to_csv(flpath)
-            if return_dataframe:
-                return abTestsDF
-            write_sucess = True
-        return write_sucess
+                flpath = self.outputfolder.joinpath(output_filename).with_suffix('.csv')
+                dataframe.to_csv(flpath)
+                write_success = True
+        return write_success
 
-    def scrape_all(self, totalfl:str='albertaTotalData', regionsfl:str='albertaRegionData',
-                   testfl:str='albertaTestingData', fltypes=('csv', 'json'),
-                   return_dataframes:bool=False):
+    def scrape_all(self, totalfl:str='alberta_total_data', regionsfl:str='alberta_region_data',
+                   testfl:str='alberta_testing_data', fltypes=('csv', 'json'),
+                   combine_dataframes:bool=False, return_dataframes:bool=False):
         '''scrape the total alberta covid-19 case counts, the covid-19 case counts by
         region and the testing data from the alberta covid-19 website
 
@@ -308,10 +304,16 @@ class albertaC19_webscraper():
             return_dataframe:bool
                 will return either the dataframes or a true/false on write success
         Returns:
+            all_data
+                if combine_dataframes = True
             totals, regions, testing
+                if combine_dataframes = False
 
         '''
-        totals = self.scrape_albertaTotals(totalfl, fltypes, return_dataframes)
-        regions = self.scrape_albertaRegions(regionsfl, fltypes, return_dataframes)
-        testing = self.scrape_albertaTesting(testfl, fltypes, return_dataframes)
+        totals = self.scrape_albertaTotals(output_filename=totalfl, fltypes=fltypes, return_dataframe=return_dataframes)
+        regions = self.scrape_albertaRegions(output_filename=regionsfl, fltypes=fltypes, return_dataframe=return_dataframes)
+        testing = self.scrape_albertaTesting(output_filename=testfl, fltypes=fltypes, return_dataframe=return_dataframes)
+        if combine_dataframes:
+            all_data = totals.join([regions, testing])
+            return all_data
         return totals, regions, testing
