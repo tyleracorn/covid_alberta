@@ -3,10 +3,10 @@
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
 index = {"albertaC19": "00_webscraper.ipynb",
-         "calculate_doublingtimes_region": "01_analyses.ipynb"}
+         "calculate_doublingtimes": "01_analysis.ipynb"}
 
 modules = ["webscraper.py",
-           "analyses.py"]
+           "analysis.py"]
 
 doc_url = "https://tyleracorn.github.io/covid_alberta/"
 
