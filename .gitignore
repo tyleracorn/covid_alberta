@@ -140,3 +140,4 @@ checklink/cookies.txt
 
 # VsCode settings
 .vscode/settings.json
+.pypirc
