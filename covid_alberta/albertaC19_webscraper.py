@@ -71,9 +71,73 @@ class albertaC19_webscraper():
         if html_update_ids:
             self.html_ids.update(html_update_ids)
 
+    def _clean_cumulative_data(self, ab_cumulative_dict:dict):
+        '''
+        utility function used to clean up the cumulative data
+        '''
+        dates = ab_cumulative_dict['x']['data'][0]['x']
+        cum_cases = ab_cumulative_dict['x']['data'][0]['y']
+        # Convert to DataFrame
+        df_ab_cumulative = pd.DataFrame(data=cum_cases,
+                                        index=dates,
+                                        columns=['cum_cases'])
+        # Clean up formatting of df
+        df_ab_cumulative.index = pd.to_datetime(df_ab_cumulative.index)
+
+        return df_ab_cumulative
+
+    def _clean_daily_case_data(self, ab_daily_cases:dict):
+        '''
+        utility function used to clean up the daily case data
+        '''
+        daily_data = dict()
+        for data in ab_daily_cases['x']['data']:
+            daily_data[data['name']] = {'date': data['x'], '{0}_count'.format(data['name']): data['y']}
+        if len(daily_data) != 2:
+            raise Warning("expecting only 2 daily case categories. Website likely changed. Check the results")
+        df_confirmed = pd.DataFrame(data=daily_data['Confirmed']['Confirmed_count'],
+                                    index=daily_data['Confirmed']['date'],
+                                    columns=['Confirmed_count'])
+        df_confirmed.index = pd.to_datetime(df_confirmed.index)
+        df_probable = pd.DataFrame(data=daily_data['Probable']['Probable_count'],
+                                   index=daily_data['Probable']['date'],
+                                   columns=['Probable_count'])
+        df_probable.index = pd.to_datetime(df_probable.index)
+
+        df_daily_cases = df_confirmed.join(df_probable)
+        df_daily_cases['Daily_count'] = df_daily_cases.sum(axis=1)
+
+        return df_daily_cases
 
     def scrape_albertaTotals(self, output_filename:str='albertaTotalData', fltypes=('csv', 'json'),
                              return_dataframe:bool=False):
+    def _clean_case_status_data(self, ab_case_status:dict):
+        '''
+        utility function used to clean up the case status data
+        '''
+        status_data = dict()
+        for data in ab_case_status['x']['data']:
+            status_data[data['name']] = {'date': data['x'], '{0}_cum'.format(data['name']): data['y']}
+        if len(status_data) != 3:
+            raise Warning("expecting only 3 status case categories. Website likely changed. Check the results")
+
+        df_active = pd.DataFrame(data=status_data['Active']['Active_cum'],
+                                 index=status_data['Active']['date'],
+                                 columns=['Active_cum'])
+        df_active.index = pd.to_datetime(df_active.index)
+        df_died = pd.DataFrame(data=status_data['Died']['Died_cum'],
+                               index=status_data['Died']['date'],
+                               columns=['Died_cum'])
+        df_died.index = pd.to_datetime(df_died.index)
+        df_recovered = pd.DataFrame(data=status_data['Recovered']['Recovered_cum'],
+                                    index=status_data['Recovered']['date'],
+                                    columns=['Recovered_cum'])
+        df_recovered.index = pd.to_datetime(df_recovered.index)
+
+        df_case_status = df_active.join([df_died, df_recovered])
+
+        return df_case_status
+
         '''scrape the total case counts in alberta and save the data to the output folder
 
         Parameters:
