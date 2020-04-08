@@ -7,10 +7,21 @@ import pandas as pd
 
 
 class albertaC19_webscraper():
-    def __init__(self, covid_url:str='https://covid19stats.alberta.ca/', outputfolder:str='data'):
+    def __init__(self, covid_url:str='https://covid19stats.alberta.ca/', outputfolder:str='data',
+                 html_update_ids:dict=None, totals_update_fig_order:dict=None):
         '''
         using requests and BeautfulSoup4 scrape updated covid data from the ablerta website
         save the outputs into a outputfolder
+
+        Parameters:
+            covid_url:str
+                the url for the alberta covid website
+            outputfolder:str
+                the folder to save the scraped data to. Will create the folder if it can't find it
+            html_update_ids:dict
+                if the alberta covid html changes the html id where the specified data is stored you
+                can update to the new id here. This is used in the scrapers. current keys are
+                `totals`, `regions`, `testing`
         '''
         self.covid_url = covid_url
         self.outputfolder = Path(outputfolder)
@@ -18,6 +29,48 @@ class albertaC19_webscraper():
 
         self.page = requests.get(self.covid_url)
         self.soup = BeautifulSoup(self.page.content, 'html.parser')
+        self.html_ids = {'totals':'cases', 'regions':'geospatial', 'testing': 'laboratory-testing'}
+        if html_update_ids:
+            self.html_ids.update(html_update_ids)
+        self.totals_figure_order = {'cum_cases':0, 'daily_cases':3, 'case_status':1}
+        if totals_update_fig_order:
+            self.totals_figure_order.update(totals_update_fig_order)
+
+    def print_html_class_ids(self, html_class_attr:str='level2', print_self:bool=True):
+        '''
+        websites change so use this if you need to figure out what to use to update the `html_update_class_ids`
+        dictionary. Right now the covid alberta site is using `level 2` as one of the id attributes for
+        the tabs containing the covid data. The scrapers in this are searching for the `id` string.
+
+        this function will find all `div` `class` sections in the soup with
+
+        Parameters:
+            html_class_attr:str
+                will search through the soup find all class names that include this attribute string
+            print_self:bool
+                will also print the current python class parameters `html_class_ids` which are used
+                by the scraper functions to find the data
+
+        '''
+        find_results = False
+        for tag in self.soup.find_all('div', {'class': html_class_attr}):
+            if tag.attrs: find_results = True
+            print(tag.attrs)
+        if not find_results:
+            print(f'unable to find tag: {html_class_attr}')
+        if print_self:
+            print("Here are the class id's we are currently using for this scraper:")
+            print(self.html_ids)
+        return find_results
+
+    def update_html_ids(self, html_update_ids:dict=None):
+        '''
+        update the ids used to search for the data in the alberta covid html
+        current keys are `totals`, `regions`, `testing`
+        '''
+        if html_update_ids:
+            self.html_ids.update(html_update_ids)
+
 
     def scrape_albertaTotals(self, output_filename:str='albertaTotalData', fltypes=('csv', 'json'),
                              return_dataframe:bool=False):
