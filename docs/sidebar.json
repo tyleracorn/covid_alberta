@@ -1,7 +1,7 @@
 {
   "covid_alberta": {
     "Overview": "/",
-    "webscraper": "/webscraper",
+    "webscraper: albertaC19": "/webscraper",
     "analysis": "/analysis"
   }
 }

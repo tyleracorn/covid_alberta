@@ -1,12 +1,12 @@
 ---
 
-title: webscraper
+title: webscraper: albertaC19
 
 keywords: fastai
 sidebar: home_sidebar
 
-summary: "API details."
-description: "API details."
+summary: "The module that grabs updated covid-19 data from the alberta  [Covid19stats](https://covid19stats.alberta.ca/) website."
+description: "The module that grabs updated covid-19 data from the alberta  [Covid19stats](https://covid19stats.alberta.ca/) website."
 ---
 <!--
 
@@ -37,6 +37,346 @@ description: "API details."
     {% raw %}
     
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">class</span> <span class="nc">albertaC19</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">covid_url</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;https://covid19stats.alberta.ca/&#39;</span><span class="p">,</span> <span class="n">outputfolder</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">,</span>
+                 <span class="n">html_update_ids</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">totals_update_fig_order</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        using requests and BeautfulSoup4 scrape updated covid data from the ablerta website</span>
+<span class="sd">        save the outputs into a outputfolder</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        </span>
+<span class="sd">            covid_url:str</span>
+<span class="sd">                the url for the alberta covid website</span>
+<span class="sd">            outputfolder:str</span>
+<span class="sd">                the folder to save the scraped data to. Will create the folder if it can&#39;t find it</span>
+<span class="sd">            html_update_ids:dict</span>
+<span class="sd">                if the alberta covid html changes the html id where the specified data is stored you</span>
+<span class="sd">                can update to the new id here. This is used in the scrapers. current keys are</span>
+<span class="sd">                `totals`, `regions`, `testing`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">covid_url</span> <span class="o">=</span> <span class="n">covid_url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outputfolder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">outputfolder</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputfolder</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputfolder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">page</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">covid_url</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">page</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="s1">&#39;html.parser&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">html_ids</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;totals&#39;</span><span class="p">:</span><span class="s1">&#39;cases&#39;</span><span class="p">,</span> <span class="s1">&#39;regions&#39;</span><span class="p">:</span><span class="s1">&#39;geospatial&#39;</span><span class="p">,</span> <span class="s1">&#39;testing&#39;</span><span class="p">:</span> <span class="s1">&#39;laboratory-testing&#39;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">html_update_ids</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">html_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">html_update_ids</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totals_figure_order</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cum_cases&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;daily_cases&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;case_status&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">totals_update_fig_order</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">totals_figure_order</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">totals_update_fig_order</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">print_html_class_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">html_class_attr</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;level2&#39;</span><span class="p">,</span> <span class="n">print_self</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        websites change so use this if you need to figure out what to use to update the `html_update_class_ids`</span>
+<span class="sd">        dictionary. Right now the covid alberta site is using `level 2` as one of the id attributes for</span>
+<span class="sd">        the tabs containing the covid data. The scrapers in this are searching for the `id` string.</span>
+
+<span class="sd">        this function will find all `div` `class` sections in the soup with</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        </span>
+<span class="sd">            html_class_attr:str</span>
+<span class="sd">                will search through the soup find all class names that include this attribute string</span>
+<span class="sd">            print_self:bool</span>
+<span class="sd">                will also print the current python class parameters `html_class_ids` which are used</span>
+<span class="sd">                by the scraper functions to find the data</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">find_results</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">soup</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;class&#39;</span><span class="p">:</span> <span class="n">html_class_attr</span><span class="p">}):</span>
+            <span class="k">if</span> <span class="n">tag</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span> <span class="n">find_results</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">tag</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">find_results</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;unable to find tag: </span><span class="si">{</span><span class="n">html_class_attr</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">print_self</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Here are the class id&#39;s we are currently using for this scraper:&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">html_ids</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">find_results</span>
+
+    <span class="k">def</span> <span class="nf">update_html_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">html_update_ids</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        update the ids used to search for the data in the alberta covid html</span>
+<span class="sd">        current keys are `totals`, `regions`, `testing`</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">html_update_ids</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">html_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">html_update_ids</span><span class="p">)</span>
+            
+    <span class="k">def</span> <span class="nf">update_fig_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">totals_update_fig_order</span><span class="p">:</span><span class="nb">dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The order the figures are displayed on the website using python 0 index. This is important</span>
+<span class="sd">        because the associated tags use a randomly generated id name so I am accessing them by order</span>
+<span class="sd">        `self.totals_figure_order` will print out the default order expected</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">totals_update_fig_order</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">totals_figure_order</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">totals_update_fig_order</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_clean_cumulative_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ab_cumulative_dict</span><span class="p">:</span><span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        utility function used to clean up the cumulative data</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">dates</span> <span class="o">=</span> <span class="n">ab_cumulative_dict</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+        <span class="n">cum_cases</span> <span class="o">=</span> <span class="n">ab_cumulative_dict</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+        <span class="c1"># Convert to DataFrame</span>
+        <span class="n">df_ab_cumulative</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">cum_cases</span><span class="p">,</span>
+                                        <span class="n">index</span><span class="o">=</span><span class="n">dates</span><span class="p">,</span>
+                                        <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cum_cases&#39;</span><span class="p">])</span>
+        <span class="c1"># Clean up formatting of df</span>
+        <span class="n">df_ab_cumulative</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_ab_cumulative</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df_ab_cumulative</span>
+
+    <span class="k">def</span> <span class="nf">_clean_daily_case_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ab_daily_cases</span><span class="p">:</span><span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        utility function used to clean up the daily case data</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">daily_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">ab_daily_cases</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
+            <span class="n">daily_data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">_count&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]):</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">daily_data</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;expecting only 2 daily case categories. Website likely changed. Check the results&quot;</span><span class="p">)</span>
+        <span class="n">df_confirmed</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">daily_data</span><span class="p">[</span><span class="s1">&#39;Confirmed&#39;</span><span class="p">][</span><span class="s1">&#39;Confirmed_count&#39;</span><span class="p">],</span>
+                                    <span class="n">index</span><span class="o">=</span><span class="n">daily_data</span><span class="p">[</span><span class="s1">&#39;Confirmed&#39;</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">],</span>
+                                    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Confirmed_count&#39;</span><span class="p">])</span>
+        <span class="n">df_confirmed</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_confirmed</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">df_probable</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">daily_data</span><span class="p">[</span><span class="s1">&#39;Probable&#39;</span><span class="p">][</span><span class="s1">&#39;Probable_count&#39;</span><span class="p">],</span>
+                                   <span class="n">index</span><span class="o">=</span><span class="n">daily_data</span><span class="p">[</span><span class="s1">&#39;Probable&#39;</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">],</span>
+                                   <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Probable_count&#39;</span><span class="p">])</span>
+        <span class="n">df_probable</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_probable</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">df_daily_cases</span> <span class="o">=</span> <span class="n">df_confirmed</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_probable</span><span class="p">)</span>
+        <span class="n">df_daily_cases</span><span class="p">[</span><span class="s1">&#39;Daily_count&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_daily_cases</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">df_daily_cases</span>
+
+    <span class="k">def</span> <span class="nf">_clean_case_status_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ab_case_status</span><span class="p">:</span><span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        utility function used to clean up the case status data</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">status_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">ab_case_status</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
+            <span class="n">status_data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">_cum&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]):</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]}</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">status_data</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;expecting only 3 status case categories. Website likely changed. Check the results&quot;</span><span class="p">)</span>
+
+        <span class="n">df_active</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">status_data</span><span class="p">[</span><span class="s1">&#39;Active&#39;</span><span class="p">][</span><span class="s1">&#39;Active_cum&#39;</span><span class="p">],</span>
+                                 <span class="n">index</span><span class="o">=</span><span class="n">status_data</span><span class="p">[</span><span class="s1">&#39;Active&#39;</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">],</span>
+                                 <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Active_cum&#39;</span><span class="p">])</span>
+        <span class="n">df_active</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_active</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">df_died</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">status_data</span><span class="p">[</span><span class="s1">&#39;Died&#39;</span><span class="p">][</span><span class="s1">&#39;Died_cum&#39;</span><span class="p">],</span>
+                               <span class="n">index</span><span class="o">=</span><span class="n">status_data</span><span class="p">[</span><span class="s1">&#39;Died&#39;</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">],</span>
+                               <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Died_cum&#39;</span><span class="p">])</span>
+        <span class="n">df_died</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_died</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">df_recovered</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">status_data</span><span class="p">[</span><span class="s1">&#39;Recovered&#39;</span><span class="p">][</span><span class="s1">&#39;Recovered_cum&#39;</span><span class="p">],</span>
+                                    <span class="n">index</span><span class="o">=</span><span class="n">status_data</span><span class="p">[</span><span class="s1">&#39;Recovered&#39;</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">],</span>
+                                    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Recovered_cum&#39;</span><span class="p">])</span>
+        <span class="n">df_recovered</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_recovered</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="n">df_case_status</span> <span class="o">=</span> <span class="n">df_active</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">df_died</span><span class="p">,</span> <span class="n">df_recovered</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">df_case_status</span>
+
+    <span class="k">def</span> <span class="nf">scrape_albertaTotals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_filename</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;alberta_total_data&#39;</span><span class="p">,</span> <span class="n">fltypes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="s1">&#39;json&#39;</span><span class="p">),</span>
+                             <span class="n">update_figure_order</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_dataframe</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;scrape the total case counts in alberta and save the data to the output folder</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        </span>
+<span class="sd">            output_filename:str</span>
+<span class="sd">                filename without the file ending</span>
+<span class="sd">            fltypes:[list or str]</span>
+<span class="sd">                will save out either csv, json or both filetypes. use `None` to not write anything</span>
+<span class="sd">            update_figure_order:dict</span>
+<span class="sd">                the order the figures are displayed on the website using python 0 index. This is important</span>
+<span class="sd">                because the associated tags use a randomly generated id name so I am accessing them by order</span>
+<span class="sd">                `self.totals_figure_order` will print out the default order expected</span>
+<span class="sd">            return_dataframe:bool</span>
+<span class="sd">                will return either the dataframes or a true/false on write success</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">html_ids</span><span class="p">[</span><span class="s1">&#39;totals&#39;</span><span class="p">])</span>
+        <span class="n">totals_results</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s1">&#39;script&#39;</span><span class="p">)</span>
+        <span class="n">fig_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">totals_figure_order</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">update_figure_order</span><span class="p">:</span>
+            <span class="n">fig_order</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">update_figure_order</span><span class="p">)</span>
+
+        <span class="c1"># Scrape the data</span>
+        <span class="n">ab_cumulative</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">totals_results</span><span class="p">[</span><span class="n">fig_order</span><span class="p">[</span><span class="s1">&#39;cum_cases&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">string</span><span class="p">)</span>
+        <span class="n">ab_daily_cases</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">totals_results</span><span class="p">[</span><span class="n">fig_order</span><span class="p">[</span><span class="s1">&#39;daily_cases&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">string</span><span class="p">)</span>
+        <span class="n">ab_case_status</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">totals_results</span><span class="p">[</span><span class="n">fig_order</span><span class="p">[</span><span class="s1">&#39;case_status&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">string</span><span class="p">)</span>
+
+        <span class="n">df_ab_cumulative</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clean_cumulative_data</span><span class="p">(</span><span class="n">ab_cumulative</span><span class="p">)</span>
+        <span class="n">df_ab_daily_cases</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clean_daily_case_data</span><span class="p">(</span><span class="n">ab_daily_cases</span><span class="p">)</span>
+        <span class="n">df_ab_case_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clean_case_status_data</span><span class="p">(</span><span class="n">ab_case_status</span><span class="p">)</span>
+
+        <span class="n">df_ab_all</span> <span class="o">=</span> <span class="n">df_ab_cumulative</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">df_ab_daily_cases</span><span class="p">,</span> <span class="n">df_ab_case_status</span><span class="p">])</span>
+        <span class="c1"># clean up df formatting</span>
+        <span class="n">df_ab_all</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">df_ab_all</span> <span class="o">=</span> <span class="n">df_ab_all</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="c1"># Write out the data. If fltypes = None the function will return False</span>
+        <span class="n">write_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_dataframe</span><span class="p">(</span><span class="n">df_ab_all</span><span class="p">,</span> <span class="n">output_filename</span><span class="p">,</span> <span class="n">fltypes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_dataframe</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">df_ab_all</span>
+        <span class="k">return</span> <span class="n">write_success</span>
+
+    <span class="k">def</span> <span class="nf">scrape_albertaRegions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_filename</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;alberta_region_data&#39;</span><span class="p">,</span> <span class="n">fltypes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="s1">&#39;json&#39;</span><span class="p">),</span>
+                              <span class="n">return_dataframe</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;scrape the total case counts in alberta by region and save the data</span>
+<span class="sd">        to the output folder</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        </span>
+<span class="sd">            output_filename:str</span>
+<span class="sd">                filename without the file ending</span>
+<span class="sd">            fltypes:[list or str]</span>
+<span class="sd">                will save out either csv, json or both filetypes</span>
+<span class="sd">            return_dataframe:bool</span>
+<span class="sd">                will return either the dataframes or a true/false on write success</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">html_ids</span><span class="p">[</span><span class="s1">&#39;regions&#39;</span><span class="p">])</span>
+
+        <span class="n">region_results</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s1">&#39;script&#39;</span><span class="p">)</span>
+        <span class="n">results_as_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">region_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">string</span><span class="p">)[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+
+        <span class="n">zone_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">results_as_dict</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
+        <span class="n">region_data_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span> <span class="p">(</span><span class="n">zone_len</span><span class="p">):</span>
+            <span class="n">zone_name</span> <span class="o">=</span> <span class="n">results_as_dict</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+            <span class="n">region_data_dict</span><span class="p">[</span><span class="n">zone_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;date&#39;</span><span class="p">:</span><span class="n">results_as_dict</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">],</span>
+                                           <span class="s1">&#39;cumulative&#39;</span><span class="p">:</span><span class="n">results_as_dict</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="n">idx</span><span class="p">][</span><span class="s1">&#39;y&#39;</span><span class="p">]}</span>
+
+        <span class="n">list_ab_regions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">region_data_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="s1">&#39;Zone&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+                <span class="n">zone</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39; Zone&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">zone</span> <span class="o">=</span> <span class="n">key</span>
+            <span class="n">column</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">zone</span><span class="si">}</span><span class="s1">_cumulative&#39;</span>
+            <span class="n">list_ab_regions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">region_data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;cumulative&#39;</span><span class="p">],</span>
+                                                <span class="n">index</span><span class="o">=</span><span class="n">region_data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">],</span>
+                                                <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="n">column</span><span class="p">]))</span>
+
+        <span class="n">df_ab_regions</span> <span class="o">=</span> <span class="n">list_ab_regions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">list_ab_regions</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="n">df_ab_regions</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_ab_regions</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">df_ab_regions</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">df_ab_regions</span> <span class="o">=</span> <span class="n">df_ab_regions</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="c1"># Write out the data. If fltypes = None the function will return False</span>
+        <span class="n">write_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_dataframe</span><span class="p">(</span><span class="n">df_ab_regions</span><span class="p">,</span> <span class="n">output_filename</span><span class="p">,</span> <span class="n">fltypes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_dataframe</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">df_ab_regions</span>
+        <span class="k">return</span> <span class="n">write_success</span>
+
+    <span class="k">def</span> <span class="nf">scrape_albertaTesting</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_filename</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;alberta_testing_data&#39;</span><span class="p">,</span> <span class="n">fltypes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="s1">&#39;json&#39;</span><span class="p">),</span>
+                              <span class="n">return_dataframe</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;scrape the testing counts by date in alberta and save the data</span>
+<span class="sd">        to the output folder</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        </span>
+<span class="sd">            output_filename:str</span>
+<span class="sd">                filename without the file ending</span>
+<span class="sd">            fltypes:[list or str]</span>
+<span class="sd">                will save out either csv, json or both filetypes</span>
+<span class="sd">            return_dataframe:bool</span>
+<span class="sd">                will return either the dataframes or a true/false on write success</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">soup</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">html_ids</span><span class="p">[</span><span class="s1">&#39;testing&#39;</span><span class="p">])</span>
+        <span class="n">testing_results</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">find_all</span><span class="p">(</span><span class="s1">&#39;script&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">testing_results</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;expecting only 1 test case categories. Website likely changed. Check the results&quot;</span><span class="p">)</span>
+        <span class="c1"># Scrape the data</span>
+        <span class="n">tests_as_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">testing_results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">string</span><span class="p">)[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+        <span class="n">dates</span> <span class="o">=</span> <span class="n">tests_as_dict</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+        <span class="n">test_count</span> <span class="o">=</span> <span class="n">tests_as_dict</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+        <span class="c1"># Convert to DataFrame</span>
+        <span class="n">df_ab_tests</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">test_count</span><span class="p">,</span>
+                                        <span class="n">index</span><span class="o">=</span><span class="n">dates</span><span class="p">,</span>
+                                        <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;test_count&#39;</span><span class="p">])</span>
+        <span class="n">df_ab_tests</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">df_ab_tests</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">df_ab_tests</span> <span class="o">=</span> <span class="n">df_ab_tests</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="c1"># Write out the data. If fltypes = None the function will return False</span>
+        <span class="n">write_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_write_dataframe</span><span class="p">(</span><span class="n">df_ab_tests</span><span class="p">,</span> <span class="n">output_filename</span><span class="p">,</span> <span class="n">fltypes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_dataframe</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">df_ab_tests</span>
+        <span class="k">return</span> <span class="n">write_success</span>
+
+    <span class="k">def</span> <span class="nf">_write_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataframe</span><span class="p">:</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">output_filename</span><span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">fltypes</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;&#39;</span>
+<span class="sd">        utility function to write the dataframe scraped. This way we can easily add different</span>
+<span class="sd">        write functions to all the scraping functions.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">        </span>
+<span class="sd">            dataframe:pd.DataFrame</span>
+<span class="sd">                pd.DataFrame to write out</span>
+<span class="sd">            output_filename:str</span>
+<span class="sd">                filename without the file ending</span>
+<span class="sd">            fltypes:[list or str]</span>
+<span class="sd">                will save out either csv, json or both filetypes</span>
+<span class="sd">        </span>
+<span class="sd">        ----</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        </span>
+<span class="sd">            write_success:bool</span>
+<span class="sd">                whether it wrote anything out or not. If `None` for fltypes is passed</span>
+<span class="sd">                will return `False`</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">write_success</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># Write out the data</span>
+        <span class="k">if</span> <span class="n">fltypes</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;json&#39;</span> <span class="ow">in</span> <span class="n">fltypes</span><span class="p">:</span>
+                <span class="n">flpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputfolder</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">output_filename</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span><span class="p">)</span>
+                <span class="n">dataframe</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">flpath</span><span class="p">)</span>
+                <span class="n">write_success</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="s1">&#39;csv&#39;</span> <span class="ow">in</span> <span class="n">fltypes</span><span class="p">:</span>
+                <span class="n">flpath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outputfolder</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="n">output_filename</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">)</span>
+                <span class="n">dataframe</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">flpath</span><span class="p">)</span>
+                <span class="n">write_success</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">write_success</span>
+
+    <span class="k">def</span> <span class="nf">scrape_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">totalfl</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;alberta_total_data&#39;</span><span class="p">,</span> <span class="n">regionsfl</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;alberta_region_data&#39;</span><span class="p">,</span>
+                   <span class="n">testfl</span><span class="p">:</span><span class="nb">str</span><span class="o">=</span><span class="s1">&#39;alberta_testing_data&#39;</span><span class="p">,</span> <span class="n">fltypes</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="s1">&#39;json&#39;</span><span class="p">),</span>
+                   <span class="n">combine_dataframes</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_dataframes</span><span class="p">:</span><span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;scrape the total alberta covid-19 case counts, the covid-19 case counts by</span>
+<span class="sd">        region and the testing data from the alberta covid-19 website</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            output_filename:str</span>
+<span class="sd">                filename without the file ending</span>
+<span class="sd">            fltypes:[list or str]</span>
+<span class="sd">                will save out either csv, json or both filetypes</span>
+<span class="sd">            return_dataframe:bool</span>
+<span class="sd">                will return either the dataframes or a true/false on write success</span>
+<span class="sd">        ----</span>
+<span class="sd">        Returns:</span>
+<span class="sd">        </span>
+<span class="sd">            all_data</span>
+<span class="sd">                if combine_dataframes = True</span>
+<span class="sd">            totals, regions, testing</span>
+<span class="sd">                if combine_dataframes = False</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">totals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scrape_albertaTotals</span><span class="p">(</span><span class="n">output_filename</span><span class="o">=</span><span class="n">totalfl</span><span class="p">,</span> <span class="n">fltypes</span><span class="o">=</span><span class="n">fltypes</span><span class="p">,</span> <span class="n">return_dataframe</span><span class="o">=</span><span class="n">return_dataframes</span><span class="p">)</span>
+        <span class="n">regions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scrape_albertaRegions</span><span class="p">(</span><span class="n">output_filename</span><span class="o">=</span><span class="n">regionsfl</span><span class="p">,</span> <span class="n">fltypes</span><span class="o">=</span><span class="n">fltypes</span><span class="p">,</span> <span class="n">return_dataframe</span><span class="o">=</span><span class="n">return_dataframes</span><span class="p">)</span>
+        <span class="n">testing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scrape_albertaTesting</span><span class="p">(</span><span class="n">output_filename</span><span class="o">=</span><span class="n">testfl</span><span class="p">,</span> <span class="n">fltypes</span><span class="o">=</span><span class="n">fltypes</span><span class="p">,</span> <span class="n">return_dataframe</span><span class="o">=</span><span class="n">return_dataframes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">combine_dataframes</span><span class="p">:</span>
+            <span class="n">all_data</span> <span class="o">=</span> <span class="n">totals</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">regions</span><span class="p">,</span> <span class="n">testing</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">all_data</span>
+        <span class="k">return</span> <span class="n">totals</span><span class="p">,</span> <span class="n">regions</span><span class="p">,</span> <span class="n">testing</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
 
 </div>
     {% endraw %}
@@ -76,6 +416,49 @@ description: "API details."
 
 
 <div class="output_markdown rendered_html output_subarea ">
+<h4 id="albertaC19.__init__" class="doc_header"><code>albertaC19.__init__</code><a href="https://github.com/tyleracorn/covid_alberta/tree/master/covid_alberta/webscraper.py#L14" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>albertaC19.__init__</code>(<strong><code>covid_url</code></strong>:<code>str</code>=<em><code>'https://covid19stats.alberta.ca/'</code></em>, <strong><code>outputfolder</code></strong>:<code>str</code>=<em><code>'data'</code></em>, <strong><code>html_update_ids</code></strong>:<code>dict</code>=<em><code>None</code></em>, <strong><code>totals_update_fig_order</code></strong>:<code>dict</code>=<em><code>None</code></em>)</p>
+</blockquote>
+<p>using requests and BeautfulSoup4 scrape updated covid data from the ablerta website
+save the outputs into a outputfolder</p>
+<p>Parameters:</p>
+
+<pre><code>covid_url:str
+    the url for the alberta covid website
+outputfolder:str
+    the folder to save the scraped data to. Will create the folder if it can't find it
+html_update_ids:dict
+    if the alberta covid html changes the html id where the specified data is stored you
+    can update to the new id here. This is used in the scrapers. current keys are
+    `totals`, `regions`, `testing`</code></pre>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="albertaC19-scraping-methods">albertaC19 scraping methods<a class="anchor-link" href="#albertaC19-scraping-methods"> </a></h2><p>The main scrapping methods are shown here along with some examples of what the outputs look like</p>
+
+</div>
+</div>
+</div>
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
 <h4 id="albertaC19.scrape_albertaTotals" class="doc_header"><code>albertaC19.scrape_albertaTotals</code><a href="https://github.com/tyleracorn/covid_alberta/tree/master/covid_alberta/webscraper.py#L154" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>albertaC19.scrape_albertaTotals</code>(<strong><code>output_filename</code></strong>:<code>str</code>=<em><code>'alberta_total_data'</code></em>, <strong><code>fltypes</code></strong>=<em><code>('csv', 'json')</code></em>, <strong><code>update_figure_order</code></strong>=<em><code>None</code></em>, <strong><code>return_dataframe</code></strong>:<code>bool</code>=<em><code>False</code></em>)</p>
 </blockquote>
 <p>scrape the total case counts in alberta and save the data to the output folder</p>
@@ -92,6 +475,139 @@ update_figure_order:dict
 return_dataframe:bool
     will return either the dataframes or a true/false on write success</code></pre>
 
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># set up the webscraper</span>
+<span class="kn">import</span> <span class="nn">covid_alberta</span>
+<span class="n">abscraper</span> <span class="o">=</span> <span class="n">covid_alberta</span><span class="o">.</span><span class="n">albertaC19</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Grab totals and print the tail of the dataframe</span>
+<span class="n">ab_totals</span> <span class="o">=</span> <span class="n">abscraper</span><span class="o">.</span><span class="n">scrape_albertaTotals</span><span class="p">(</span><span class="n">fltypes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_dataframe</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ab_totals</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>cum_cases</th>
+      <th>Confirmed_count</th>
+      <th>Probable_count</th>
+      <th>Daily_count</th>
+      <th>Active_cum</th>
+      <th>Died_cum</th>
+      <th>Recovered_cum</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2020-04-04</th>
+      <td>1250</td>
+      <td>38</td>
+      <td>19</td>
+      <td>57</td>
+      <td>618</td>
+      <td>23</td>
+      <td>322</td>
+    </tr>
+    <tr>
+      <th>2020-04-05</th>
+      <td>1308</td>
+      <td>35</td>
+      <td>23</td>
+      <td>58</td>
+      <td>676</td>
+      <td>24</td>
+      <td>382</td>
+    </tr>
+    <tr>
+      <th>2020-04-06</th>
+      <td>1344</td>
+      <td>20</td>
+      <td>16</td>
+      <td>36</td>
+      <td>712</td>
+      <td>27</td>
+      <td>449</td>
+    </tr>
+    <tr>
+      <th>2020-04-07</th>
+      <td>1409</td>
+      <td>39</td>
+      <td>26</td>
+      <td>65</td>
+      <td>776</td>
+      <td>27</td>
+      <td>518</td>
+    </tr>
+    <tr>
+      <th>2020-04-08</th>
+      <td>1423</td>
+      <td>9</td>
+      <td>5</td>
+      <td>14</td>
+      <td>876</td>
+      <td>29</td>
+      <td>518</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 </div>
 
 </div>
@@ -139,6 +655,114 @@ return_dataframe:bool
     {% raw %}
     
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Grab regions and print the tail of the dataframe</span>
+<span class="n">ab_regions</span> <span class="o">=</span> <span class="n">abscraper</span><span class="o">.</span><span class="n">scrape_albertaRegions</span><span class="p">(</span><span class="n">fltypes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_dataframe</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ab_regions</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Calgary_cumulative</th>
+      <th>Central_cumulative</th>
+      <th>Edmont_cumulative</th>
+      <th>North_cumulative</th>
+      <th>South_cumulative</th>
+      <th>Unknown_cumulative</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2020-04-04</th>
+      <td>778</td>
+      <td>61</td>
+      <td>315</td>
+      <td>75</td>
+      <td>19</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2020-04-05</th>
+      <td>801</td>
+      <td>65</td>
+      <td>340</td>
+      <td>79</td>
+      <td>21</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2020-04-06</th>
+      <td>821</td>
+      <td>65</td>
+      <td>348</td>
+      <td>86</td>
+      <td>22</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2020-04-07</th>
+      <td>854</td>
+      <td>72</td>
+      <td>364</td>
+      <td>94</td>
+      <td>23</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2020-04-08</th>
+      <td>860</td>
+      <td>72</td>
+      <td>368</td>
+      <td>95</td>
+      <td>26</td>
+      <td>2</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
 
 <div class="output_wrapper">
 <div class="output">
@@ -160,6 +784,114 @@ fltypes:[list or str]
 return_dataframe:bool
     will return either the dataframes or a true/false on write success</code></pre>
 
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Grab testing data and print the tail of the dataframe</span>
+<span class="n">ab_testing</span> <span class="o">=</span> <span class="n">abscraper</span><span class="o">.</span><span class="n">scrape_albertaRegions</span><span class="p">(</span><span class="n">fltypes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_dataframe</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ab_testing</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Calgary_cumulative</th>
+      <th>Central_cumulative</th>
+      <th>Edmont_cumulative</th>
+      <th>North_cumulative</th>
+      <th>South_cumulative</th>
+      <th>Unknown_cumulative</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2020-04-04</th>
+      <td>778</td>
+      <td>61</td>
+      <td>315</td>
+      <td>75</td>
+      <td>19</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2020-04-05</th>
+      <td>801</td>
+      <td>65</td>
+      <td>340</td>
+      <td>79</td>
+      <td>21</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2020-04-06</th>
+      <td>821</td>
+      <td>65</td>
+      <td>348</td>
+      <td>86</td>
+      <td>22</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2020-04-07</th>
+      <td>854</td>
+      <td>72</td>
+      <td>364</td>
+      <td>94</td>
+      <td>23</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2020-04-08</th>
+      <td>860</td>
+      <td>72</td>
+      <td>368</td>
+      <td>95</td>
+      <td>26</td>
+      <td>2</td>
+    </tr>
+  </tbody>
+</table>
+</div>
 </div>
 
 </div>
@@ -204,6 +936,50 @@ totals, regions, testing
 
 </div>
 
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">ab_totals</span><span class="p">,</span> <span class="n">ab_regions</span><span class="p">,</span> <span class="n">ab_testing</span> <span class="o">=</span> <span class="n">abscraper</span><span class="o">.</span><span class="n">scrape_all</span><span class="p">(</span><span class="n">fltypes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_dataframes</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Columns in Totals DataFrame&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ab_totals</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">to_list</span><span class="p">(),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Columns in Regions DataFrame&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ab_regions</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">to_list</span><span class="p">(),</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Columns in Testing DataFrame&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ab_testing</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">to_list</span><span class="p">())</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>Columns in Totals DataFrame
+[&#39;cum_cases&#39;, &#39;Confirmed_count&#39;, &#39;Probable_count&#39;, &#39;Daily_count&#39;, &#39;Active_cum&#39;, &#39;Died_cum&#39;, &#39;Recovered_cum&#39;] 
+
+Columns in Regions DataFrame
+[&#39;Calgary_cumulative&#39;, &#39;Central_cumulative&#39;, &#39;Edmont_cumulative&#39;, &#39;North_cumulative&#39;, &#39;South_cumulative&#39;, &#39;Unknown_cumulative&#39;] 
+
+Columns in Testing DataFrame
+[&#39;test_count&#39;]
+</pre>
+</div>
 </div>
 
 </div>
@@ -257,6 +1033,57 @@ print_self:bool
     {% raw %}
     
 <div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Example of the output:</span>
+<span class="n">abscraper</span><span class="o">.</span><span class="n">print_html_class_ids</span><span class="p">()</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>{&#39;id&#39;: &#39;highlights&#39;, &#39;class&#39;: [&#39;section&#39;, &#39;level2&#39;, &#39;unnumbered&#39;]}
+{&#39;id&#39;: &#39;cases&#39;, &#39;class&#39;: [&#39;section&#39;, &#39;level2&#39;, &#39;unnumbered&#39;]}
+{&#39;id&#39;: &#39;characteristics&#39;, &#39;class&#39;: [&#39;section&#39;, &#39;level2&#39;, &#39;unnumbered&#39;]}
+{&#39;id&#39;: &#39;severe-outcomes&#39;, &#39;class&#39;: [&#39;section&#39;, &#39;level2&#39;, &#39;unnumbered&#39;]}
+{&#39;id&#39;: &#39;geospatial&#39;, &#39;class&#39;: [&#39;section&#39;, &#39;level2&#39;, &#39;unnumbered&#39;]}
+{&#39;id&#39;: &#39;laboratory-testing&#39;, &#39;class&#39;: [&#39;section&#39;, &#39;level2&#39;, &#39;unnumbered&#39;]}
+{&#39;id&#39;: &#39;data-export&#39;, &#39;class&#39;: [&#39;section&#39;, &#39;level2&#39;, &#39;unnumbered&#39;]}
+{&#39;id&#39;: &#39;data-notes&#39;, &#39;class&#39;: [&#39;section&#39;, &#39;level2&#39;, &#39;unnumbered&#39;]}
+Here are the class id&#39;s we are currently using for this scraper:
+{&#39;totals&#39;: &#39;cases&#39;, &#39;regions&#39;: &#39;geospatial&#39;, &#39;testing&#39;: &#39;laboratory-testing&#39;}
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>True</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
 
 <div class="output_wrapper">
 <div class="output">
@@ -280,6 +1107,13 @@ current keys are <code>totals</code>, <code>regions</code>, <code>testing</code>
 </div>
     {% endraw %}
 
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>Pass it a dictionary with the keys <code>totals</code>, <code>regions</code>, and/or <code>testing</code> to update the id tag for that scraper</p>
+
+</div>
+</div>
+</div>
 </div>
  
 

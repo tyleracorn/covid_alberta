@@ -10,7 +10,7 @@ entries:
       title: Overview
       url: /
     - output: web,pdf
-      title: webscraper
+      title: 'webscraper: albertaC19'
       url: /webscraper
     - output: web,pdf
       title: analysis
