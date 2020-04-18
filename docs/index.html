@@ -71,6 +71,41 @@ description: "This is a small package that I have developed to look at some of t
 </div>
 </div>
 
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
+<span class="ansi-red-intense-fg ansi-bold">IndexError</span>                                Traceback (most recent call last)
+<span class="ansi-green-intense-fg ansi-bold">&lt;ipython-input-3-cea1377c44fe&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">      1</span> abC19scaper <span class="ansi-yellow-intense-fg ansi-bold">=</span> covid_alberta<span class="ansi-yellow-intense-fg ansi-bold">.</span>albertaC19<span class="ansi-yellow-intense-fg ansi-bold">(</span>outputfolder<span class="ansi-yellow-intense-fg ansi-bold">=</span><span class="ansi-blue-intense-fg ansi-bold">&#34;&#34;</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-fg">      2</span> <span class="ansi-red-intense-fg ansi-bold"># I don&#39;t plan on writing out the data in this example thus the keywords</span>
+<span class="ansi-green-intense-fg ansi-bold">----&gt; 3</span><span class="ansi-yellow-intense-fg ansi-bold"> </span>ab_totals<span class="ansi-yellow-intense-fg ansi-bold">,</span> ab_regions<span class="ansi-yellow-intense-fg ansi-bold">,</span> ab_testing <span class="ansi-yellow-intense-fg ansi-bold">=</span> abC19scaper<span class="ansi-yellow-intense-fg ansi-bold">.</span>scrape_all<span class="ansi-yellow-intense-fg ansi-bold">(</span>fltypes<span class="ansi-yellow-intense-fg ansi-bold">=</span><span class="ansi-green-intense-fg ansi-bold">None</span><span class="ansi-yellow-intense-fg ansi-bold">,</span> return_dataframes<span class="ansi-yellow-intense-fg ansi-bold">=</span><span class="ansi-green-intense-fg ansi-bold">True</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>
+
+<span class="ansi-green-intense-fg ansi-bold">c:\Repositories_C\covid_alberta\covid_alberta\webscraper.py</span> in <span class="ansi-cyan-fg">scrape_all</span><span class="ansi-blue-intense-fg ansi-bold">(self, totalfl, regionsfl, testfl, fltypes, combine_dataframes, return_dataframes)</span>
+<span class="ansi-green-fg">    335</span> 
+<span class="ansi-green-fg">    336</span>         &#39;&#39;&#39;
+<span class="ansi-green-intense-fg ansi-bold">--&gt; 337</span><span class="ansi-yellow-intense-fg ansi-bold">         </span>totals <span class="ansi-yellow-intense-fg ansi-bold">=</span> self<span class="ansi-yellow-intense-fg ansi-bold">.</span>scrape_albertaTotals<span class="ansi-yellow-intense-fg ansi-bold">(</span>output_filename<span class="ansi-yellow-intense-fg ansi-bold">=</span>totalfl<span class="ansi-yellow-intense-fg ansi-bold">,</span> fltypes<span class="ansi-yellow-intense-fg ansi-bold">=</span>fltypes<span class="ansi-yellow-intense-fg ansi-bold">,</span> return_dataframe<span class="ansi-yellow-intense-fg ansi-bold">=</span>return_dataframes<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-fg">    338</span>         regions <span class="ansi-yellow-intense-fg ansi-bold">=</span> self<span class="ansi-yellow-intense-fg ansi-bold">.</span>scrape_albertaRegions<span class="ansi-yellow-intense-fg ansi-bold">(</span>output_filename<span class="ansi-yellow-intense-fg ansi-bold">=</span>regionsfl<span class="ansi-yellow-intense-fg ansi-bold">,</span> fltypes<span class="ansi-yellow-intense-fg ansi-bold">=</span>fltypes<span class="ansi-yellow-intense-fg ansi-bold">,</span> return_dataframe<span class="ansi-yellow-intense-fg ansi-bold">=</span>return_dataframes<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-fg">    339</span>         testing <span class="ansi-yellow-intense-fg ansi-bold">=</span> self<span class="ansi-yellow-intense-fg ansi-bold">.</span>scrape_albertaTesting<span class="ansi-yellow-intense-fg ansi-bold">(</span>output_filename<span class="ansi-yellow-intense-fg ansi-bold">=</span>testfl<span class="ansi-yellow-intense-fg ansi-bold">,</span> fltypes<span class="ansi-yellow-intense-fg ansi-bold">=</span>fltypes<span class="ansi-yellow-intense-fg ansi-bold">,</span> return_dataframe<span class="ansi-yellow-intense-fg ansi-bold">=</span>return_dataframes<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+
+<span class="ansi-green-intense-fg ansi-bold">c:\Repositories_C\covid_alberta\covid_alberta\webscraper.py</span> in <span class="ansi-cyan-fg">scrape_albertaTotals</span><span class="ansi-blue-intense-fg ansi-bold">(self, output_filename, fltypes, update_figure_order, return_dataframe)</span>
+<span class="ansi-green-fg">    177</span>         <span class="ansi-red-intense-fg ansi-bold"># Scrape the data</span>
+<span class="ansi-green-fg">    178</span>         ab_cumulative <span class="ansi-yellow-intense-fg ansi-bold">=</span> json<span class="ansi-yellow-intense-fg ansi-bold">.</span>loads<span class="ansi-yellow-intense-fg ansi-bold">(</span>totals_results<span class="ansi-yellow-intense-fg ansi-bold">[</span>fig_order<span class="ansi-yellow-intense-fg ansi-bold">[</span><span class="ansi-blue-intense-fg ansi-bold">&#39;cum_cases&#39;</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">.</span>string<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-intense-fg ansi-bold">--&gt; 179</span><span class="ansi-yellow-intense-fg ansi-bold">         </span>ab_daily_cases <span class="ansi-yellow-intense-fg ansi-bold">=</span> json<span class="ansi-yellow-intense-fg ansi-bold">.</span>loads<span class="ansi-yellow-intense-fg ansi-bold">(</span>totals_results<span class="ansi-yellow-intense-fg ansi-bold">[</span>fig_order<span class="ansi-yellow-intense-fg ansi-bold">[</span><span class="ansi-blue-intense-fg ansi-bold">&#39;daily_cases&#39;</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">.</span>string<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-fg">    180</span>         ab_case_status <span class="ansi-yellow-intense-fg ansi-bold">=</span> json<span class="ansi-yellow-intense-fg ansi-bold">.</span>loads<span class="ansi-yellow-intense-fg ansi-bold">(</span>totals_results<span class="ansi-yellow-intense-fg ansi-bold">[</span>fig_order<span class="ansi-yellow-intense-fg ansi-bold">[</span><span class="ansi-blue-intense-fg ansi-bold">&#39;case_status&#39;</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">.</span>string<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-fg">    181</span> 
+
+<span class="ansi-red-intense-fg ansi-bold">IndexError</span>: list index out of range</pre>
+</div>
+</div>
+
+</div>
+</div>
+
 </div>
     {% endraw %}
 

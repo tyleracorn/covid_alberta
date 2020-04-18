@@ -68,7 +68,7 @@ description: "The module that grabs updated covid-19 data from the alberta  [Cov
         <span class="bp">self</span><span class="o">.</span><span class="n">html_ids</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;totals&#39;</span><span class="p">:</span><span class="s1">&#39;cases&#39;</span><span class="p">,</span> <span class="s1">&#39;regions&#39;</span><span class="p">:</span><span class="s1">&#39;geospatial&#39;</span><span class="p">,</span> <span class="s1">&#39;testing&#39;</span><span class="p">:</span> <span class="s1">&#39;laboratory-testing&#39;</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">html_update_ids</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">html_ids</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">html_update_ids</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">totals_figure_order</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cum_cases&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;daily_cases&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;case_status&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">totals_figure_order</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cum_cases&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;daily_cases&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;case_status&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">totals_update_fig_order</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">totals_figure_order</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">totals_update_fig_order</span><span class="p">)</span>
 
@@ -162,8 +162,11 @@ description: "The module that grabs updated covid-19 data from the alberta  [Cov
         <span class="n">status_data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">ab_case_status</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">][</span><span class="s1">&#39;data&#39;</span><span class="p">]:</span>
             <span class="n">status_data</span><span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="s1">&#39;</span><span class="si">{0}</span><span class="s1">_cum&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]):</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]}</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">status_data</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Warning</span><span class="p">(</span><span class="s2">&quot;expecting only 3 status case categories. Website likely changed. Check the results&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">status_data</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span> <span class="c1"># totals and case status were combined</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: expecting only 3 status case categories. Website likely changed. Check the results&quot;</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
 
         <span class="n">df_active</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">status_data</span><span class="p">[</span><span class="s1">&#39;Active&#39;</span><span class="p">][</span><span class="s1">&#39;Active_cum&#39;</span><span class="p">],</span>
                                  <span class="n">index</span><span class="o">=</span><span class="n">status_data</span><span class="p">[</span><span class="s1">&#39;Active&#39;</span><span class="p">][</span><span class="s1">&#39;date&#39;</span><span class="p">],</span>
@@ -459,7 +462,7 @@ html_update_ids:dict
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="albertaC19.scrape_albertaTotals" class="doc_header"><code>albertaC19.scrape_albertaTotals</code><a href="https://github.com/tyleracorn/covid_alberta/tree/master/covid_alberta/webscraper.py#L154" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>albertaC19.scrape_albertaTotals</code>(<strong><code>output_filename</code></strong>:<code>str</code>=<em><code>'alberta_total_data'</code></em>, <strong><code>fltypes</code></strong>=<em><code>('csv', 'json')</code></em>, <strong><code>update_figure_order</code></strong>=<em><code>None</code></em>, <strong><code>return_dataframe</code></strong>:<code>bool</code>=<em><code>False</code></em>)</p>
+<h4 id="albertaC19.scrape_albertaTotals" class="doc_header"><code>albertaC19.scrape_albertaTotals</code><a href="https://github.com/tyleracorn/covid_alberta/tree/master/covid_alberta/webscraper.py#L157" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>albertaC19.scrape_albertaTotals</code>(<strong><code>output_filename</code></strong>:<code>str</code>=<em><code>'alberta_total_data'</code></em>, <strong><code>fltypes</code></strong>=<em><code>('csv', 'json')</code></em>, <strong><code>update_figure_order</code></strong>=<em><code>None</code></em>, <strong><code>return_dataframe</code></strong>:<code>bool</code>=<em><code>False</code></em>)</p>
 </blockquote>
 <p>scrape the total case counts in alberta and save the data to the output folder</p>
 <p>Parameters:</p>
@@ -511,6 +514,39 @@ return_dataframe:bool
 
 <div class="inner_cell">
     <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">abscraper</span><span class="o">.</span><span class="n">totals_figure_order</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;cum_cases&#39;: 0, &#39;daily_cases&#39;: 3, &#39;case_status&#39;: 1}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+
+<div class="inner_cell">
+    <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="c1"># Grab totals and print the tail of the dataframe</span>
 <span class="n">ab_totals</span> <span class="o">=</span> <span class="n">abscraper</span><span class="o">.</span><span class="n">scrape_albertaTotals</span><span class="p">(</span><span class="n">fltypes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_dataframe</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">ab_totals</span><span class="o">.</span><span class="n">tail</span><span class="p">()</span>
@@ -525,91 +561,24 @@ return_dataframe:bool
 
 <div class="output_area">
 
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
+<span class="ansi-red-intense-fg ansi-bold">IndexError</span>                                Traceback (most recent call last)
+<span class="ansi-green-intense-fg ansi-bold">&lt;ipython-input-8-0dfcef192f7f&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-fg">      1</span> <span class="ansi-red-intense-fg ansi-bold"># Grab totals and print the tail of the dataframe</span>
+<span class="ansi-green-intense-fg ansi-bold">----&gt; 2</span><span class="ansi-yellow-intense-fg ansi-bold"> </span>ab_totals <span class="ansi-yellow-intense-fg ansi-bold">=</span> abscraper<span class="ansi-yellow-intense-fg ansi-bold">.</span>scrape_albertaTotals<span class="ansi-yellow-intense-fg ansi-bold">(</span>fltypes<span class="ansi-yellow-intense-fg ansi-bold">=</span><span class="ansi-green-intense-fg ansi-bold">None</span><span class="ansi-yellow-intense-fg ansi-bold">,</span> return_dataframe<span class="ansi-yellow-intense-fg ansi-bold">=</span><span class="ansi-green-intense-fg ansi-bold">True</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-fg">      3</span> ab_totals<span class="ansi-yellow-intense-fg ansi-bold">.</span>tail<span class="ansi-yellow-intense-fg ansi-bold">(</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>
 
-<div class="output_html rendered_html output_subarea output_execute_result">
-<div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
+<span class="ansi-green-intense-fg ansi-bold">c:\Repositories_C\covid_alberta\covid_alberta\webscraper.py</span> in <span class="ansi-cyan-fg">scrape_albertaTotals</span><span class="ansi-blue-intense-fg ansi-bold">(self, output_filename, fltypes, update_figure_order, return_dataframe)</span>
+<span class="ansi-green-fg">    177</span>         <span class="ansi-red-intense-fg ansi-bold"># Scrape the data</span>
+<span class="ansi-green-fg">    178</span>         ab_cumulative <span class="ansi-yellow-intense-fg ansi-bold">=</span> json<span class="ansi-yellow-intense-fg ansi-bold">.</span>loads<span class="ansi-yellow-intense-fg ansi-bold">(</span>totals_results<span class="ansi-yellow-intense-fg ansi-bold">[</span>fig_order<span class="ansi-yellow-intense-fg ansi-bold">[</span><span class="ansi-blue-intense-fg ansi-bold">&#39;cum_cases&#39;</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">.</span>string<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-intense-fg ansi-bold">--&gt; 179</span><span class="ansi-yellow-intense-fg ansi-bold">         </span>ab_daily_cases <span class="ansi-yellow-intense-fg ansi-bold">=</span> json<span class="ansi-yellow-intense-fg ansi-bold">.</span>loads<span class="ansi-yellow-intense-fg ansi-bold">(</span>totals_results<span class="ansi-yellow-intense-fg ansi-bold">[</span>fig_order<span class="ansi-yellow-intense-fg ansi-bold">[</span><span class="ansi-blue-intense-fg ansi-bold">&#39;daily_cases&#39;</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">.</span>string<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-fg">    180</span>         ab_case_status <span class="ansi-yellow-intense-fg ansi-bold">=</span> json<span class="ansi-yellow-intense-fg ansi-bold">.</span>loads<span class="ansi-yellow-intense-fg ansi-bold">(</span>totals_results<span class="ansi-yellow-intense-fg ansi-bold">[</span>fig_order<span class="ansi-yellow-intense-fg ansi-bold">[</span><span class="ansi-blue-intense-fg ansi-bold">&#39;case_status&#39;</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">]</span><span class="ansi-yellow-intense-fg ansi-bold">.</span>string<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-fg">    181</span> 
 
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>cum_cases</th>
-      <th>Confirmed_count</th>
-      <th>Probable_count</th>
-      <th>Daily_count</th>
-      <th>Active_cum</th>
-      <th>Died_cum</th>
-      <th>Recovered_cum</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>2020-04-04</th>
-      <td>1250</td>
-      <td>38</td>
-      <td>19</td>
-      <td>57</td>
-      <td>618</td>
-      <td>23</td>
-      <td>322</td>
-    </tr>
-    <tr>
-      <th>2020-04-05</th>
-      <td>1308</td>
-      <td>35</td>
-      <td>23</td>
-      <td>58</td>
-      <td>676</td>
-      <td>24</td>
-      <td>382</td>
-    </tr>
-    <tr>
-      <th>2020-04-06</th>
-      <td>1344</td>
-      <td>20</td>
-      <td>16</td>
-      <td>36</td>
-      <td>712</td>
-      <td>27</td>
-      <td>449</td>
-    </tr>
-    <tr>
-      <th>2020-04-07</th>
-      <td>1409</td>
-      <td>39</td>
-      <td>26</td>
-      <td>65</td>
-      <td>776</td>
-      <td>27</td>
-      <td>518</td>
-    </tr>
-    <tr>
-      <th>2020-04-08</th>
-      <td>1423</td>
-      <td>9</td>
-      <td>5</td>
-      <td>14</td>
-      <td>876</td>
-      <td>29</td>
-      <td>518</td>
-    </tr>
-  </tbody>
-</table>
+<span class="ansi-red-intense-fg ansi-bold">IndexError</span>: list index out of range</pre>
 </div>
-</div>
-
 </div>
 
 </div>
@@ -629,7 +598,7 @@ return_dataframe:bool
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="albertaC19.scrape_albertaRegions" class="doc_header"><code>albertaC19.scrape_albertaRegions</code><a href="https://github.com/tyleracorn/covid_alberta/tree/master/covid_alberta/webscraper.py#L197" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>albertaC19.scrape_albertaRegions</code>(<strong><code>output_filename</code></strong>:<code>str</code>=<em><code>'alberta_region_data'</code></em>, <strong><code>fltypes</code></strong>=<em><code>('csv', 'json')</code></em>, <strong><code>return_dataframe</code></strong>:<code>bool</code>=<em><code>False</code></em>)</p>
+<h4 id="albertaC19.scrape_albertaRegions" class="doc_header"><code>albertaC19.scrape_albertaRegions</code><a href="https://github.com/tyleracorn/covid_alberta/tree/master/covid_alberta/webscraper.py#L200" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>albertaC19.scrape_albertaRegions</code>(<strong><code>output_filename</code></strong>:<code>str</code>=<em><code>'alberta_region_data'</code></em>, <strong><code>fltypes</code></strong>=<em><code>('csv', 'json')</code></em>, <strong><code>return_dataframe</code></strong>:<code>bool</code>=<em><code>False</code></em>)</p>
 </blockquote>
 <p>scrape the total case counts in alberta by region and save the data
 to the output folder</p>
@@ -771,7 +740,7 @@ return_dataframe:bool
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="albertaC19.scrape_albertaTesting" class="doc_header"><code>albertaC19.scrape_albertaTesting</code><a href="https://github.com/tyleracorn/covid_alberta/tree/master/covid_alberta/webscraper.py#L245" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>albertaC19.scrape_albertaTesting</code>(<strong><code>output_filename</code></strong>:<code>str</code>=<em><code>'alberta_testing_data'</code></em>, <strong><code>fltypes</code></strong>=<em><code>('csv', 'json')</code></em>, <strong><code>return_dataframe</code></strong>:<code>bool</code>=<em><code>False</code></em>)</p>
+<h4 id="albertaC19.scrape_albertaTesting" class="doc_header"><code>albertaC19.scrape_albertaTesting</code><a href="https://github.com/tyleracorn/covid_alberta/tree/master/covid_alberta/webscraper.py#L248" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>albertaC19.scrape_albertaTesting</code>(<strong><code>output_filename</code></strong>:<code>str</code>=<em><code>'alberta_testing_data'</code></em>, <strong><code>fltypes</code></strong>=<em><code>('csv', 'json')</code></em>, <strong><code>return_dataframe</code></strong>:<code>bool</code>=<em><code>False</code></em>)</p>
 </blockquote>
 <p>scrape the testing counts by date in alberta and save the data
 to the output folder</p>
@@ -913,7 +882,7 @@ return_dataframe:bool
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="albertaC19.scrape_all" class="doc_header"><code>albertaC19.scrape_all</code><a href="https://github.com/tyleracorn/covid_alberta/tree/master/covid_alberta/webscraper.py#L315" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>albertaC19.scrape_all</code>(<strong><code>totalfl</code></strong>:<code>str</code>=<em><code>'alberta_total_data'</code></em>, <strong><code>regionsfl</code></strong>:<code>str</code>=<em><code>'alberta_region_data'</code></em>, <strong><code>testfl</code></strong>:<code>str</code>=<em><code>'alberta_testing_data'</code></em>, <strong><code>fltypes</code></strong>=<em><code>('csv', 'json')</code></em>, <strong><code>combine_dataframes</code></strong>:<code>bool</code>=<em><code>False</code></em>, <strong><code>return_dataframes</code></strong>:<code>bool</code>=<em><code>False</code></em>)</p>
+<h4 id="albertaC19.scrape_all" class="doc_header"><code>albertaC19.scrape_all</code><a href="https://github.com/tyleracorn/covid_alberta/tree/master/covid_alberta/webscraper.py#L318" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>albertaC19.scrape_all</code>(<strong><code>totalfl</code></strong>:<code>str</code>=<em><code>'alberta_total_data'</code></em>, <strong><code>regionsfl</code></strong>:<code>str</code>=<em><code>'alberta_region_data'</code></em>, <strong><code>testfl</code></strong>:<code>str</code>=<em><code>'alberta_testing_data'</code></em>, <strong><code>fltypes</code></strong>=<em><code>('csv', 'json')</code></em>, <strong><code>combine_dataframes</code></strong>:<code>bool</code>=<em><code>False</code></em>, <strong><code>return_dataframes</code></strong>:<code>bool</code>=<em><code>False</code></em>)</p>
 </blockquote>
 <p>scrape the total alberta covid-19 case counts, the covid-19 case counts by
 region and the testing data from the alberta covid-19 website</p>

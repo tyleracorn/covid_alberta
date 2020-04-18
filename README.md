@@ -21,6 +21,36 @@ abC19scaper = covid_alberta.albertaC19(outputfolder="")
 ab_totals, ab_regions, ab_testing = abC19scaper.scrape_all(fltypes=None, return_dataframes=True)
 ```
 
+
+    ---------------------------------------------------------------------------
+
+    IndexError                                Traceback (most recent call last)
+
+    <ipython-input-3-cea1377c44fe> in <module>
+          1 abC19scaper = covid_alberta.albertaC19(outputfolder="")
+          2 # I don't plan on writing out the data in this example thus the keywords
+    ----> 3 ab_totals, ab_regions, ab_testing = abC19scaper.scrape_all(fltypes=None, return_dataframes=True)
+    
+
+    c:\Repositories_C\covid_alberta\covid_alberta\webscraper.py in scrape_all(self, totalfl, regionsfl, testfl, fltypes, combine_dataframes, return_dataframes)
+        335 
+        336         '''
+    --> 337         totals = self.scrape_albertaTotals(output_filename=totalfl, fltypes=fltypes, return_dataframe=return_dataframes)
+        338         regions = self.scrape_albertaRegions(output_filename=regionsfl, fltypes=fltypes, return_dataframe=return_dataframes)
+        339         testing = self.scrape_albertaTesting(output_filename=testfl, fltypes=fltypes, return_dataframe=return_dataframes)
+    
+
+    c:\Repositories_C\covid_alberta\covid_alberta\webscraper.py in scrape_albertaTotals(self, output_filename, fltypes, update_figure_order, return_dataframe)
+        177         # Scrape the data
+        178         ab_cumulative = json.loads(totals_results[fig_order['cum_cases']].string)
+    --> 179         ab_daily_cases = json.loads(totals_results[fig_order['daily_cases']].string)
+        180         ab_case_status = json.loads(totals_results[fig_order['case_status']].string)
+        181 
+    
+
+    IndexError: list index out of range
+
+
 Now we can show the dataframes
 
 ```

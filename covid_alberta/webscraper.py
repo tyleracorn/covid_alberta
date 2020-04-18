@@ -37,7 +37,7 @@ class albertaC19():
         self.html_ids = {'totals':'cases', 'regions':'geospatial', 'testing': 'laboratory-testing'}
         if html_update_ids:
             self.html_ids.update(html_update_ids)
-        self.totals_figure_order = {'cum_cases':0, 'daily_cases':3, 'case_status':1}
+        self.totals_figure_order = {'cum_cases':0, 'daily_cases':2, 'case_status':0}
         if totals_update_fig_order:
             self.totals_figure_order.update(totals_update_fig_order)
 
@@ -131,8 +131,11 @@ class albertaC19():
         status_data = dict()
         for data in ab_case_status['x']['data']:
             status_data[data['name']] = {'date': data['x'], '{0}_cum'.format(data['name']): data['y']}
-        if len(status_data) != 3:
-            raise Warning("expecting only 3 status case categories. Website likely changed. Check the results")
+        try:
+            if len(status_data) != 4: # totals and case status were combined
+                print("WARNING: expecting only 3 status case categories. Website likely changed. Check the results")
+        except:
+            pass
 
         df_active = pd.DataFrame(data=status_data['Active']['Active_cum'],
                                  index=status_data['Active']['date'],
